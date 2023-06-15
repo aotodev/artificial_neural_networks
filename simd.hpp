@@ -67,9 +67,27 @@ namespace simd {
 
         for (size_t i = 0; i < n; i++)
         {
-            for (size_t j = 0; j < m; j+=8)
+            for (size_t j = 0; j < (m - mLeftover); j+=8)
             {
                 tempResults[i] = _mm256_fmadd_ps(_mm256_loadu_ps(&inVec[j]), _mm256_loadu_ps(&inMatrix[i * m + j]), tempResults[i]);
+            }
+
+            if(mLeftover)
+            {
+                /* fill an array of size 8 with the remaing values followed by 0s */
+                size_t offset = m - mLeftover;
+
+                float vecTemp[8] = { 0.0f };
+                float matTemp[8] = { 0.0f };
+
+
+                for (size_t k = offset; k < m; k++)
+                {
+                    vecTemp[k - offset] = inVec[k];
+                    matTemp[k - offset] = inMatrix[i * m + k];
+                }
+
+                tempResults[i] = _mm256_fmadd_ps(_mm256_loadu_ps(vecTemp), _mm256_loadu_ps(matTemp), tempResults[i]);
             }
         }
 
