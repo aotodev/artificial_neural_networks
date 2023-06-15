@@ -112,7 +112,7 @@ struct hyperbolic_tan : public activation<hyperbolic_tan>
 			__m256 divisor = _mm256_add_ps(exp_, _mm256_set1_ps(1.0f));
 
 			/* divide and store the result */ 
-            _mm256_storeu_ps(&outVec[i], _mm256_max_ps(dividend, divisor));
+            _mm256_storeu_ps(&outVec[i], _mm256_div_ps(dividend, divisor));
         }
 
         if (leftover)
