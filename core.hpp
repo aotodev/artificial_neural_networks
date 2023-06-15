@@ -1,5 +1,18 @@
 #pragma once
 
+#if !defined(APP_COMPILER_GNUC) && !defined(APP_COMPILER_CLANG) && !defined(APP_COMPILER_MSVC)
+
+#if defined(__clang__)
+#define APP_COMPILER_CLANG
+
+#elif defined(__GNUC__) || defined(__GNUG__)
+#define APP_COMPILER_GNUC
+
+#elif defined(_MSC_VER)
+#define APP_COMPILER_MSVC
+
+#endif
+
 #define CAT(Arg1, Arg2) CAT_INTERNAL(Arg1, Arg2)
 #define CAT_INTERNAL(Arg1, Arg2) Arg1##Arg2
 
