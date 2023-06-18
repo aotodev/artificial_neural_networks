@@ -1,6 +1,7 @@
 #pragma once
 
 #include <chrono>
+#include <string>
 
 class benchmark_timer
 {
@@ -28,7 +29,7 @@ private:
         auto duration = end - start;
         double ms = duration * 0.001;
 
-        printf("\033[0;33;44mBENCHMARK[%s]: %.4fms\033[0m\n", m_text.c_str(), ms);
+        printf("\033[0;33;44m\nBENCHMARK[%s]: %.4fms\033[0m\n", m_text.c_str(), ms);
 
     }
 

@@ -64,6 +64,7 @@ namespace simd {
         alignas(CACHELINE_SIZE) std::vector<__m256> tempResults(n, _mm256_setzero_ps());
 
         size_t nLeftover = n % 8;
+        size_t mLeftover = m % 8;
 
         for (size_t i = 0; i < n; i++)
         {

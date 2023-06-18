@@ -50,25 +50,25 @@ struct sigmoid : public activation<sigmoid>
 
 	void add_bias_activation(float* outVec, const float* inBiases, size_t n)
 	{
-        size_t leftover = n % 8;
+		size_t leftover = n % 8;
 
-        for (size_t i = 0; i < (n - leftover); i+=8)
-        {
-            __m256 temp = _mm256_add_ps(_mm256_loadu_ps(&outVec[i]), _mm256_loadu_ps(&inBiases[i]));
+		for (size_t i = 0; i < (n - leftover); i+=8)
+		{
+			__m256 temp = _mm256_add_ps(_mm256_loadu_ps(&outVec[i]), _mm256_loadu_ps(&inBiases[i]));
 			_mm256_mul_ps(temp, _mm256_set1_ps(-1.0f));
 
 			temp = exp256_ps(temp);
 			temp = _mm256_add_ps(temp, _mm256_set1_ps(1.0f));
 
-            _mm256_storeu_ps(&outVec[i], _mm256_div_ps(_mm256_set1_ps(1.0f), temp));
-        }
+			_mm256_storeu_ps(&outVec[i], _mm256_div_ps(_mm256_set1_ps(1.0f), temp));
+		}
 
-        if (leftover)
-        {
-            size_t offset = n - leftover;
-            for(size_t i = offset; i < n; i++)
-                outVec[i] = 1.0f / (1.0f + (std::exp(-1.0f * (outVec[i] + inBiases[i]))));
-        }		
+		if (leftover)
+		{
+			size_t offset = n - leftover;
+			for(size_t i = offset; i < n; i++)
+				outVec[i] = 1.0f / (1.0f + (std::exp(-1.0f * (outVec[i] + inBiases[i]))));
+		}
 	}
 };
 
@@ -117,10 +117,10 @@ struct hyperbolic_tan : public activation<hyperbolic_tan>
 
         if (leftover)
         {
-            size_t offset = n - leftover;
-            for(size_t i = offset; i < n; i++)
-                outVec[i] = std::tanh(outVec[i] + inBiases[i]);
-        }		
+			size_t offset = n - leftover;
+			for(size_t i = offset; i < n; i++)
+				outVec[i] = std::tanh(outVec[i] + inBiases[i]);
+		}
 	}
 };
 
@@ -138,21 +138,21 @@ struct relu : public activation<relu>
 
 	void add_bias_activation(float* outVec, const float* inBiases, size_t n)
 	{
-        const __m256 zero_vector(_mm256_setzero_ps());
-        size_t leftover = n % 8;
+		const __m256 zero_vector(_mm256_setzero_ps());
+		size_t leftover = n % 8;
 
-        for (size_t i = 0; i < (n - leftover); i+=8)
-        {
-            __m256 sum = _mm256_add_ps(_mm256_loadu_ps(&outVec[i]), _mm256_loadu_ps(&inBiases[i]));
-            _mm256_storeu_ps(&outVec[i], _mm256_max_ps(sum, zero_vector));
-        }
+		for (size_t i = 0; i < (n - leftover); i+=8)
+		{
+			__m256 sum = _mm256_add_ps(_mm256_loadu_ps(&outVec[i]), _mm256_loadu_ps(&inBiases[i]));
+			_mm256_storeu_ps(&outVec[i], _mm256_max_ps(sum, zero_vector));
+		}
 
-        if (leftover)
-        {
-            size_t offset = n - leftover;
-            for(size_t i = offset; i < n; i++)
-                outVec[i] = std::max(outVec[i] + inBiases[i], 0.0f);
-        }		
+		if (leftover)
+		{
+			size_t offset = n - leftover;
+			for(size_t i = offset; i < n; i++)
+				outVec[i] = std::max(outVec[i] + inBiases[i], 0.0f);
+		}
 	}
 };
 
@@ -176,28 +176,28 @@ struct leaky_relu : public activation<leaky_relu>
 		 * so we'll just add the bias using instrinsics and the leaky relu activation will be serial
 		 */
 
-        const __m256 zero_vector(_mm256_setzero_ps());
-        size_t leftover = n % 8;
+		const __m256 zero_vector(_mm256_setzero_ps());
+		size_t leftover = n % 8;
 
-        for (size_t i = 0; i < (n - leftover); i+=8)
-        {
-            __m256 sum = _mm256_add_ps(_mm256_loadu_ps(&outVec[i]), _mm256_loadu_ps(&inBiases[i]));
-            _mm256_storeu_ps(&outVec[i], sum);
-        }
+		for (size_t i = 0; i < (n - leftover); i+=8)
+		{
+			__m256 sum = _mm256_add_ps(_mm256_loadu_ps(&outVec[i]), _mm256_loadu_ps(&inBiases[i]));
+			_mm256_storeu_ps(&outVec[i], sum);
+		}
 
-        if (leftover)
-        {
-            size_t offset = n - leftover;
-            for(size_t i = offset; i < n; i++)
-                outVec[i] = outVec[i] + inBiases[i];
-        }
+		if (leftover)
+		{
+			size_t offset = n - leftover;
+			for(size_t i = offset; i < n; i++)
+				outVec[i] = outVec[i] + inBiases[i];
+		}
 
 		/* perform leaky relu */
 		for (size_t i = 0; i < n; i++)
-        {
+		{
 			float output = outVec[i];
-            outVec[i] = output > 0 ? output : output * m_alpha;
-        }		
+			outVec[i] = output > 0 ? output : output * m_alpha;
+		}
 	}
 
 private:

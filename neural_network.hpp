@@ -161,7 +161,7 @@ void neural_network<u...>::forward_pass(batch_data data, activation<Activation>&
 	ptrdiff_t wIndex = inWeightsGradient.size() - 8;
 	ptrdiff_t dataOffset = m_input_count - 8;
 
-	vector_t cumulativeDeltas(m_neuron_count, 0.0f);
+	alignas(CACHELINE_SIZE) vector_t cumulativeDeltas(m_neuron_count, 0.0f);
 
 	if constexpr (s_single_value_output)
 		cumulativeDeltas[deltaIndex] = loss.derivative(neuronOutputs[deltaIndex], *data.labels);
@@ -249,7 +249,7 @@ inline void neural_network<u...>::fit(ann_data data, activation<Activation>&& ac
 	/* each thread will have a separate block of contiguous data points */
 	std::vector<std::pair<uint32_t, uint32_t>> sharedDataIndices(threadCount);
 
-	LOG_WARN("thead count == %u, training count per thread == %u", threadCount, minibatchSize / threadCount);
+	LOG_INFO("thead pool size == %u", threadCount);
 
 	for (uint32_t i = 0; i < threadCount; ++i)
 	{
@@ -295,7 +295,7 @@ inline void neural_network<u...>::fit(ann_data data, activation<Activation>&& ac
 	const uint32_t iterationsPerEpoch = data.training_count / minibatchSize;
 	float iteration = 0.0f;
 
-	LOG_INFO("iterations per epoch == %u", iterationsPerEpoch);
+	LOG_INFO("iterations per epoch == %u\n", iterationsPerEpoch);
 
 	/* set gradients to zero */
 	simd::set_to_zero(weightsGradient.data(), weightsGradient.size());

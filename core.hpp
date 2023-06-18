@@ -10,6 +10,7 @@
 
 #elif defined(_MSC_VER)
 #define APP_COMPILER_MSVC
+#endif
 
 #endif
 
