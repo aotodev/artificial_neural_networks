@@ -46,18 +46,17 @@ EPOCH 4 | cost(MSE): 0.0653
 
 BENCHMARK[neural_network::fit]: 1534.7310ms
 ```
-*Tested on AMD FX-8320E(2014), using only the base clock (3.2GHz), Arch Linux*
+*Tested on Arch Linux using AMD FX-8320E(2014), with only the base clock (3.2GHz)*
 <br/>
 
 Technical overview
 =====
-The main focus of this project is performance. Here below are some of the technics used to that end.
+Here below are some poinst about the gerenal design of the appliaction as well some of the technics used.
 ## Statically polymorphic functors
- - Initializer, optimizer, activation and loss are all features decided before compilation, making them perfect candidates for static polymorphism.
- - They are passed as functor parameters and the correct method is decided at compile-time through static polymorphism using the Curiously recurring template pattern.
+ - Features such as the initializer, optimizer, activation and loss functions are all decided before compilation, making them perfect candidates for static polymorphism.
+ - They are passed as functor parameters and the correct method is decided at compile-time using the Curiously recurring template pattern.
  - Since its type is know at compile-time, it can be trivially inlined allowing further optimizations from the compiler.
  - Functors are stateless and passed by r-value.
- - It is also important to consider the benefits code locality can provide by taking advantage of the CPU's instruction cache.
 
 Example code with disassemble:
 ```cpp
@@ -111,12 +110,10 @@ main:
         add     rsp, 24
         ret
 ```
-As it can be seen, there are no calls besides std::cin; the ReLU instructions were completely inlined and optimized inside the main function's call stack. This would have been impossible with virtual functions or function pointers.
+As it can be seen, there are no calls besides std::cin; the ReLU instructions were completely inlined and optimized inside main's call stack.
 <br/>
 
 ## Low-lock
- All multithread applications need some form of synchronization to some extent. However, careful consideration about its implementation is needed when low-latency/high-throughput is a concern; overusing mutexes and atomics can hurt performance considerably and in some cases perform even worse than its single-threaded counter-part.
-
 The *fit* function does not use any mutexes at all, instead:
 - It generates one gradient vector for every thread in the pool, divides the data points accordingly and perform the forward pass concurrently without sharing any data.
 - There will be one atomic unsigned int to serve as a flag, which each thread will signal with their respective bit when finished.
@@ -126,27 +123,13 @@ The *fit* function does not use any mutexes at all, instead:
 *Note: On many platforms, atomics of primitive types will be lockless, making the model essentially lock-free. However, there are no guarantees that this will be the case across all platforms.*
 <br/>
 
-## SIMD
-Single Instruction Multiple Data; the benefits to performance should be obvious.
-
-What is usually not so obvious is that because the *_mm256_fmadd_ps* intrinsic is a fused operation (fused multiply-add), the intermediate result from the multiplication part has infinite precision and only after adding to the third element will it be rounded to nearest float32 values. This means that our models will not only be faster, but also have higher precision!
-<br/>
-
 ## Data layout and cache-locality
-*"Cache-lines are the key! Undoubtedly! If you make even single error in data layout, you will get 100% slower solution! No jokes!" - Dmitry Vyukov*
-
-The layout of the data shapes the way we design our code. It is certainly one of the most important factors when it comes performance, and even more so in the case of Deep learning.
-
 The model tries to keep data always close in memory, and to access it in the most cache-friendly way possible.
 
  - **The weight matrices are stored in column-major order.**
-    - The input row-vector of each layer is multiplied by a weight matrix, meaning that we will calculate the dot product between the input vector with each of the columns of the matrix. If we were to structure this matrix in row-major order not only would it be extremely inefficient but also make it virtually impossible to compute with SIMD instructions.
+    - The input row-vector of each layer is multiplied by a weight matrix, meaning that we calculate the dot product between the input vector with each of the columns of the matrix. If we were to structure this matrix in row-major order not only would it be extremely inefficient but also make it very cumbersome to compute with SIMD instructions.
  - **The weight matrices are stored in a single contiguous vector.**
-    - Better avoid 2D arrays (arr[m][n]) as they are nothing more than an array of pointers. Besides the obvious cache-misses, it would also miss on other optimizations such as cache-line prefetches.
+    - Better avoid 2D arrays as they are nothing more than an array of pointers. Besides the obvious cache-misses, it would also miss on other optimizations such as cache-line prefetches.
 
 All the weights from all layers are stored on a single array, as are all the biases:
-
-```c++
-float weights[] = { w0[0,0], w0[1,0], ..., w0[n,0], w0[0,1], w0[1,1], ..., w0[m,n], w1[0,0], ..., w1[m,n], ..., wLast[m,n] };
-```
 ***
