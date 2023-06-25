@@ -51,7 +51,7 @@ BENCHMARK[neural_network::fit]: 1534.7310ms
 
 Technical overview
 =====
-Here below are some poinst about the gerenal design of the appliaction as well some of the technics used.
+Here below are some points about the general design of the application as well some of the technics used.
 ## Statically polymorphic functors
  - Features such as the initializer, optimizer, activation and loss functions are all decided before compilation, making them perfect candidates for static polymorphism.
  - They are passed as functor parameters and the correct method is decided at compile-time using the Curiously recurring template pattern.
@@ -131,5 +131,5 @@ The model tries to keep data always close in memory, and to access it in the mos
  - **The weight matrices are stored in a single contiguous vector.**
     - Better avoid 2D arrays as they are nothing more than an array of pointers. Besides the obvious cache-misses, it would also miss on other optimizations such as cache-line prefetches.
 
-All the weights from all layers are stored on a single array, as are all the biases:
+All the weights from all layers are stored inside a single array, as are all the biases:
 ***
