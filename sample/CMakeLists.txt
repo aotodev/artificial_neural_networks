@@ -8,8 +8,8 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # ---------------------------------------------------------------------------------------
 # Build type & definitions
 # ---------------------------------------------------------------------------------------
-option(BUILD_DEBUG "debug" ON)
-option(BUILD_RELEASE "release" OFF)
+option(BUILD_DEBUG "debug" OFF)
+option(BUILD_RELEASE "release" ON)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 

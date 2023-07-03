@@ -18,6 +18,8 @@
 
 #include <limits>
 
+#include <fstream>
+
 struct ann_data
 {
 	float* training_data = nullptr;
@@ -73,6 +75,8 @@ public:
 
 	template<typename Activation, typename Loss, typename Optimizer>
 	void fit(ann_data data, activation<Activation>&& activation, loss<Loss> loss, optimizer<Optimizer>&& optimizer, bool averageGradient, uint32_t epochs, uint32_t minibatchSize);
+
+	void save(const std::string& path);
 
 private:
 	struct batch_data
@@ -437,4 +441,22 @@ float neural_network<u...>::test(batch_data validationData, activation<Activatio
 	}
 
 	return cost / float(validationData.count);
+}
+template<uint32_t... u>
+void neural_network<u...>::save(const std::string& path)
+{
+	std::ofstream out;
+	out.open(path);
+
+	out << "layout\n";
+	for(auto [input, output] : m_layout)
+		out << input << ", " << output << "\n";
+
+	out << "biases\n";
+	for(auto f : m_biases)
+		out << f << ", ";
+
+	out << "\nweights\n";
+	for(auto f : m_weights)
+		out << f << ", ";
 }

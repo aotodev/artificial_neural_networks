@@ -1,22 +1,24 @@
 Artificial Neural Network
 =====
 
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](https://git.stabletec.com/utilities/vksbc/blob/master/LICENSE)
-<br/>
+![Language: C++20](https://img.shields.io/badge/Language-C%2B%2B20-blue)
+[![license](https://img.shields.io/badge/license-MIT-green.svg)](https://git.stabletec.com/utilities/vksbc/blob/master/LICENSE)
+
 Multi-threaded dense neural network from scratch in C++20 using AVX SIMD instructions (see technical overview below)
 
-Sample time-series forcasting
+Would like see this model animated? Have a look at my repository [Neural Network visualized in Vulkan/C++](https://github.com/aotodev/neural_network_visualization)
+
+Sample time-series forecasting
 =====
 ### Soybean futures
-inputing the closing price of the past 8 days to predict the next one in the future.
-<br/>
+inputting the closing price of the past 8 days to predict the next one in the future.
  - About 1.5 seconds to get a a mse cost under 0.1 using a relatively old CPU:
 
 Example code:
 ```cpp
     neural_network<8, 64, 256, 64, 1> model;
     model.initialize(he(), 0.1f);
-    model.fit(data, relu(), mse(), adam(), false, 5, 1024);
+    model.fit(data, relu(), mse(), adam(), true, 5, 1024);
 ```
 
 Console output:
@@ -47,15 +49,14 @@ EPOCH 4 | cost(MSE): 0.0653
 BENCHMARK[neural_network::fit]: 1534.7310ms
 ```
 *Tested on Arch Linux using AMD FX-8320E(2014), with only the base clock (3.2GHz)*
-<br/>
 
 Technical overview
 =====
-Here below are some points about the general design of the application as well some of the technics used.
+Here below are some points about the general design of the application as well as some of the techniques used.
 ## Statically polymorphic functors
  - Features such as the initializer, optimizer, activation and loss functions are all decided before compilation, making them perfect candidates for static polymorphism.
  - They are passed as functor parameters and the correct method is decided at compile-time using the Curiously recurring template pattern.
- - Since its type is know at compile-time, it can be trivially inlined allowing further optimizations from the compiler.
+ - Since its type is known at compile-time, it can be trivially inlined allowing further optimizations from the compiler.
  - Functors are stateless and passed by r-value.
 
 Example code with disassemble:
@@ -84,7 +85,7 @@ inline int test(activation_func<Activation>&& activation, int input)
 
 int main()
 {
-    /* use cin to hide the input value from the compiler otherwise it will just calculate the result and move it the eax register! */
+    /* use cin to hide the input value from the compiler otherwise it will just calculate the result and move it into the eax register! */
     int i;
     std::cin >> i;
 
@@ -111,7 +112,6 @@ main:
         ret
 ```
 As it can be seen, there are no calls besides std::cin; the ReLU instructions were completely inlined and optimized inside main's call stack.
-<br/>
 
 ## Low-lock
 The *fit* function does not use any mutexes at all, instead:
@@ -121,7 +121,6 @@ The *fit* function does not use any mutexes at all, instead:
 - Unlike the rest of the model (see the cache-locality section), these individual gradient vectors will be put into a 2D vector; usually we want the data to be close together in memory, but not in this case, as it could result in false sharing (when different threads access different data that gets mapped to the same cache line).
 
 *Note: On many platforms, atomics of primitive types will be lockless, making the model essentially lock-free. However, there are no guarantees that this will be the case across all platforms.*
-<br/>
 
 ## Data layout and cache-locality
 The model tries to keep data always close in memory, and to access it in the most cache-friendly way possible.
@@ -131,5 +130,4 @@ The model tries to keep data always close in memory, and to access it in the mos
  - **The weight matrices are stored in a single contiguous vector.**
     - Better avoid 2D arrays as they are nothing more than an array of pointers. Besides the obvious cache-misses, it would also miss on other optimizations such as cache-line prefetches.
 
-All the weights from all layers are stored inside a single array, as are all the biases:
-***
+All the weights from all layers are stored inside a single array, as are all the biases.

@@ -7,7 +7,7 @@
 
 int main()
 {
-    auto soybeanData = load_soybean_series("data/soybean_prices.csv", 12297);
+    auto soybeanData = load_soybean_series("data/soybean_prices.csv", true, 12297);
     ann_data data;
 
     assert(!soybeanData.empty());
@@ -23,17 +23,19 @@ int main()
         data.training_data = soybeanData.data();
         data.training_labels = data.training_data + inputWidth;
 
-        data.validation_count = data.training_count / 6; // ~16%  // 2048
+        data.validation_count = data.training_count / 6; // ~16% - 2048
         data.validation_data = data.training_data + (data.training_count - data.validation_count);
         data.validation_labels = data.validation_data + inputWidth;
     }
 
-    neural_network<8, 64, 256, 64, 1> model;
+    neural_network<8, 64, 64, 64, 1> model;
     model.initialize(he(), 0.1f);
 
     /* train mmodel */
     {
         benchmark_timer time("neural_network::fit");
-        model.fit(data, relu(), mse(), adam(), false, 5, 1024);
+        model.fit(data, relu(), mse(), adam(), true, 12, 1024);
     }
+
+    model.save("model.ann");
 }
