@@ -28,7 +28,7 @@ int main()
         data.validation_labels = data.validation_data + inputWidth;
     }
 
-    neural_network<8, 64, 64, 64, 1> model;
+    neural_network<8, 64, 64, 1> model;
     model.initialize(he(), 0.1f);
 
     /* train mmodel */
